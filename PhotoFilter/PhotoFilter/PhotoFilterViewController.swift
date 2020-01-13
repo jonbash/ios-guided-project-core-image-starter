@@ -4,7 +4,7 @@ import Photos
 
 class PhotoFilterViewController: UIViewController {
 
-    var originalImage: UIImage? 
+    var originalImage: UIImage?
 
     private var filter = CIFilter(name: "CIColorControls")!
     private var context = CIContext(options: nil)
@@ -20,8 +20,10 @@ class PhotoFilterViewController: UIViewController {
         originalImage = imageView.image
 	}
 
-    private func filterImage(_ image: UIImage) -> UIImage {
-        guard let cgImage = image.cgImage else { return image } // CGImage = pixel/bitmap data
+    private func filterImage(_ image: UIImage?) -> UIImage? {
+        guard
+            let thisImage = image,
+            let cgImage = thisImage.cgImage else { return image } // CGImage = pixel/bitmap data
         let ciImage = CIImage(cgImage: cgImage)
 
         // set up filter
@@ -37,8 +39,8 @@ class PhotoFilterViewController: UIViewController {
             let outputCGImage = context.createCGImage(  // render image
                 outputCIImage,
                 from: CGRect(origin: CGPoint.zero,
-                             size: image.size))
-            else { return image }
+                             size: thisImage.size))
+            else { return thisImage }
 
         return UIImage(cgImage: outputCGImage)          // convert to uiimage
     }
@@ -59,14 +61,18 @@ class PhotoFilterViewController: UIViewController {
 	// MARK: Slider events
 	
 	@IBAction func brightnessChanged(_ sender: UISlider) {
-
+        updateImage()
 	}
 	
 	@IBAction func contrastChanged(_ sender: Any) {
-
+        updateImage()
 	}
 	
 	@IBAction func saturationChanged(_ sender: Any) {
-
+        updateImage()
 	}
+
+    private func updateImage() {
+        imageView.image = filterImage(originalImage)
+    }
 }
