@@ -4,11 +4,7 @@ import Photos
 
 class PhotoFilterViewController: UIViewController {
 
-    var originalImage: UIImage? {
-        didSet {
-
-        }
-    }
+    var originalImage: UIImage? 
 
     private var filter = CIFilter(name: "CIColorControls")!
     private var context = CIContext(options: nil)
@@ -25,8 +21,26 @@ class PhotoFilterViewController: UIViewController {
 	}
 
     private func filterImage(_ image: UIImage) -> UIImage {
-        // TODO: return the filtered image
-        return image
+        guard let cgImage = image.cgImage else { return image } // CGImage = pixel/bitmap data
+        let ciImage = CIImage(cgImage: cgImage)
+
+        // set up filter
+        filter.setValuesForKeys([
+            kCIInputImageKey: ciImage,
+            kCIInputBrightnessKey: brightnessSlider.value,
+            kCIInputContrastKey: contrastSlider.value,
+            kCIInputSaturationKey: saturationSlider.value
+        ])
+
+        guard
+            let outputCIImage = filter.outputImage,     // get output
+            let outputCGImage = context.createCGImage(  // render image
+                outputCIImage,
+                from: CGRect(origin: CGPoint.zero,
+                             size: image.size))
+            else { return image }
+
+        return UIImage(cgImage: outputCGImage)          // convert to uiimage
     }
 
 	// MARK: Actions
