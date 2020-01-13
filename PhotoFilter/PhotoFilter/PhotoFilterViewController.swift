@@ -5,7 +5,11 @@ import Photos
 class PhotoFilterViewController: UIViewController {
 
     var originalImage: UIImage? {
-        didSet { updateImage() }
+        didSet { scaledImage = scaleImage(originalImage) }
+    }
+
+    var scaledImage: UIImage? {
+        didSet { updateImageView() }
     }
 
     private var filter = CIFilter(name: "CIColorControls")!
@@ -60,6 +64,38 @@ class PhotoFilterViewController: UIViewController {
         present(imagePicker, animated: true, completion: nil)
     }
 
+    private func scaleImage(_ image: UIImage?) -> UIImage? {
+        // Height and width
+        var scaledSize = imageView.bounds.size
+        // 1x, 2x, or 3x
+        let scale = UIScreen.main.scale
+        scaledSize = CGSize(width: scaledSize.width * scale, height: scaledSize.height * scale)
+        return image?.imageByScaling(toSize: scaledSize)
+    }
+
+    func saveFilteredImage() {
+        guard
+            let processedImage = filterImage(originalImage?.flattened)
+            else { return }
+
+        PHPhotoLibrary.requestAuthorization { (status) in
+            guard status == .authorized else { return }
+            // Let the library know we are going to make changes
+            PHPhotoLibrary.shared().performChanges({
+                // Make a new photo creation request
+                PHAssetCreationRequest.creationRequestForAsset(from: processedImage)
+            }, completionHandler: { (success, error) in
+                if let error = error {
+                    NSLog("Error saving photo: \(error)")
+                    return
+                }
+                DispatchQueue.main.async {
+                    print("Saved image!")
+                }
+            })
+        }
+    }
+
 	// MARK: Actions
 	
 	@IBAction func choosePhotoButtonPressed(_ sender: Any) {
@@ -67,27 +103,25 @@ class PhotoFilterViewController: UIViewController {
 	}
 	
 	@IBAction func savePhotoButtonPressed(_ sender: UIButton) {
-
-		// TODO: Save to photo library
-	}
-	
+        saveFilteredImage()
+    }
 
 	// MARK: Slider events
 	
 	@IBAction func brightnessChanged(_ sender: UISlider) {
-        updateImage()
+        updateImageView()
 	}
 	
 	@IBAction func contrastChanged(_ sender: Any) {
-        updateImage()
+        updateImageView()
 	}
 	
 	@IBAction func saturationChanged(_ sender: Any) {
-        updateImage()
+        updateImageView()
 	}
 
-    private func updateImage() {
-        imageView.image = filterImage(originalImage)
+    private func updateImageView() {
+        imageView.image = filterImage(scaledImage)
     }
 }
 
