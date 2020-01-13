@@ -96,8 +96,9 @@ extension PhotoFilterViewController: UIImagePickerControllerDelegate {
         _ picker: UIImagePickerController,
         didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]
     ) {
+        // use edited image if exists; if not, use original image
         if let image = (info[.editedImage] ?? info[.originalImage]) as? UIImage {
-            originalImage = image
+            originalImage = image.flattened
         }
         picker.dismiss(animated: true, completion: nil)
     }
